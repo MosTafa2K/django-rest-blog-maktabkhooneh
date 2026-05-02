@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog Posts</title>
+</head>
+<body>
+    {% if user.is_authenticated %}
+      <p>Logged in user: {{ user }}</p>
+      <form method="post">
+        {% csrf_token %}
+        <a href="{% url 'accounts:logout' %}">LogOut</a>
+      </form>
+    {% endif %}
+    <h1>Posts List</h1>
+    <ol>
+        {% for post in post_list %}
+        <div>
+            <h2><a href="{% url 'blog:post-detail-view' post.pk %}">{{ post.title }}</a></h2>
+            <p><li>{{ post.body }}</li></p>
+        </div>
+        {% endfor %}
+    </ol>
+    {% if page_obj.has_next %}
+      <a href="?{{ page_kwarg }}={{ page_obj.next_page_number }}">Next</a>
+    {% endif %}
+
+    {% for num in page_obj.paginator.page_range %}
+      <a href="?{{ page_kwarg }}={{ num }}">{{ num }}</a>
+    {% endfor %}
+    
+    {% if page_obj.has_previous %}
+      <a href="?{{ page_kwarg }}={{ page_obj.previous_page_number }}">Previous</a>
+    {% endif %}
+    <p>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</p>
+    <p><a href="{% url 'blog:post-create-view' %}">New Post</a></p>
+</body>
+</html>

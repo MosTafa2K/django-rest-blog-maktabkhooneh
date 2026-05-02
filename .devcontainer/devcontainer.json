@@ -1,0 +1,26 @@
+{
+  "name": "Django Docker Dev",
+  "dockerComposeFile": "../docker-compose.yml",
+  "service": "web",
+  "remoteUser": "vscode",
+  "workspaceFolder": "/app",
+  "postCreateCommand": "echo 'Container ready!'",
+  "postStartCommand": "sudo chmod 666 /var/run/docker.sock",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-from-docker:1": {}
+  },
+  "mounts": [
+    "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
+  ],
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.black-formatter",
+        "ms-python.flake8",
+        "ms-azuretools.vscode-docker"
+      ]
+    }
+  },
+  "forwardPorts": [8000]
+}

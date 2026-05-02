@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Post Detail</title>
+</head>
+<body>
+    <h1>{{ object.title }}</h1>
+    <strong>Author: {{ object.get_name }}</strong>
+    <br>
+    <strong>Published: {{ object.published }}</strong>
+    <p>{{ object.body }}</p>
+    <a href="{{ request.META.HTTP_REFERER }}">Back</a>
+    {% if request.user.is_authenticated and object.author == request.user or request.user.is_superuser %}
+        <a href="{% url 'blog:post-edit-view' object.pk %}">Edit</a>
+        <a href="{% url 'blog:post-delete-view' object.pk %}">Delete</a>
+    {% endif %}
+</body>
+</html>

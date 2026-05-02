@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>بلاگ من</title>
+    <style>
+        body {
+            font-family: 'Tahoma', sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            margin: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .posts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
+        }
+        .post-card {
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+        .post-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+        .post-card img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-bottom: 1px solid #eee;
+        }
+        .post-card-content {
+            padding: 20px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .post-card-content h2 {
+            font-size: 1.4em;
+            margin-top: 0;
+            margin-bottom: 15px;
+            color: #2c3e50;
+            line-height: 1.5;
+        }
+        .post-card-content p {
+            font-size: 0.95em;
+            line-height: 1.7;
+            margin-bottom: 20px;
+            flex-grow: 1; /* برای اینکه خلاصه متن فضا را پر کند */
+        }
+        .post-meta {
+            font-size: 0.85em;
+            color: #7f8c8d;
+            margin-top: auto; /* برای چسباندن به پایین کارت */
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+        }
+        .post-meta span {
+            margin-left: 10px;
+        }
+        .loading, .error {
+            text-align: center;
+            padding: 50px;
+            font-size: 1.2em;
+            color: #95a5a6;
+        }
+        /* استایل برای تاریخ شمسی */
+        .persian-date {
+            font-family: 'Tahoma', sans-serif; /* فونت فارسی */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>آخرین پست‌ها</h1>
+        <div id="posts-grid" class="posts-grid">
+            <div class="loading">در حال بارگذاری پست‌ها...</div>
+        </div>
+    </div>
+
+    <script>
+        // تابع کمکی برای تبدیل تاریخ میلادی به شمسی (با استفاده از کتابخانه)
+        // توجه: برای استفاده واقعی، باید کتابخانه jalali-moment یا مشابه آن را اضافه کنید.
+        // در این مثال، یک پیاده‌سازی ساده ارائه شده است.
+        function toPersianDate(isoString) {
+            try {
+                // اطمینان از اینکه تاریخ معتبر است
+                const date = new Date(isoString);
+                if (isNaN(date.getTime())) {
+                    return "تاریخ نامعتبر";
+                }
+
+                // پیاده‌سازی ساده تبدیل (بدون در نظر گرفتن منطقه زمانی دقیق و سال کبیسه پیچیده)
+                // برای دقت بیشتر، از کتابخانه‌های جاوا اسکریپت مانند 'jalali-moment' استفاده کنید.
+                const year = date.getFullYear();
+                const month = date.getMonth() + 1; // ماه از 0 شروع می‌شود
+                const day = date.getDate();
+
+                // یک تبدیل بسیار ابتدایی و غیر دقیق برای نمایش:
+                // تبدیل دقیق نیاز به الگوریتم پیچیده‌تری دارد.
+                // این فقط برای نشان دادن placeholder است.
+                // const persianYear = year + 621; // تقریبی
+                // const persianMonth = month;
+                // const persianDay = day;
+
+                // استفاده از فرمت دهی تاریخ میلادی به همراه نشان دادن اینکه باید شمسی شود:
+                // return `${persianYear}/${persianMonth}/${persianDay}`;
+                return date.toLocaleDateString('fa-IR', { year: 'numeric', month: 'numeric', day: 'numeric', calendar: 'jalali' });
+
+            } catch (e) {
+                console.error("Error converting date:", e);
+                return "خطا در نمایش تاریخ";
+            }
+        }
+
+        async function fetchPosts() {
+            const apiUrl = 'http://127.0.0.1:8000/blog/api/v1/posts/';
+            try {
+                const response = await fetch(apiUrl);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                // فیلتر کردن پست‌هایی که status: false دارند، اگر لازم باشد
+                // return data.filter(post => post.status === true);
+                return data; // نمایش همه پست‌ها طبق نمونه خروجی
+            } catch (error) {
+                console.error('Failed to fetch posts:', error);
+                return null; // بازگرداندن null در صورت خطا
+            }
+        }
+
+        function displayPosts(posts) {
+            const gridContainer = document.getElementById('posts-grid');
+            gridContainer.innerHTML = ''; // پاک کردن پیام بارگذاری یا خطای قبلی
+
+            if (!posts || posts.length === 0) {
+                gridContainer.innerHTML = '<div class="error">پستی یافت نشد یا خطایی رخ داد.</div>';
+                return;
+            }
+
+            posts.forEach(post => {
+                // فقط پست‌هایی که status: true دارند نمایش داده شوند (اختیاری)
+                // if (!post.status) return;
+
+                const postCard = document.createElement('div');
+                postCard.className = 'post-card';
+
+                // نمایش تصویر در صورت وجود
+                if (post.image) {
+                    const img = document.createElement('img');
+                    img.src = post.image;
+                    img.alt = post.title || 'تصویر پست';
+                    postCard.appendChild(img);
+                }
+
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'post-card-content';
+
+                // عنوان پست
+                const title = document.createElement('h2');
+                title.textContent = post.title || 'بدون عنوان';
+                contentDiv.appendChild(title);
+
+                // خلاصه متن پست (snippet)
+                const snippet = document.createElement('p');
+                // محدود کردن طول خلاصه به مثلاً 3 خط (این فقط یک تقریب است)
+                // اگر نیاز به برش دقیق‌تر دارید، باید از CSS max-height و overflow استفاده کنید یا طول متن را کنترل کنید.
+                snippet.textContent = post.snippet || 'بدون خلاصه.';
+                // برای محدود کردن بصری در CSS:
+                // snippet.style.webkitLineClamp = '3'; // برای مرورگرهای WebKit
+                // snippet.style.display = '-webkit-box';
+                // snippet.style.webkitBoxOrient = 'vertical';
+                // snippet.style.overflow = 'hidden';
+                contentDiv.appendChild(snippet);
+
+                postCard.appendChild(contentDiv);
+
+                // فراداده‌ها (دسته بندی و تاریخ انتشار)
+                const metaDiv = document.createElement('div');
+                metaDiv.className = 'post-meta';
+
+                // دسته بندی
+                const categorySpan = document.createElement('span');
+                categorySpan.textContent = `دسته: ${post.category?.name || 'بدون دسته'}`;
+                metaDiv.appendChild(categorySpan);
+
+                // تاریخ انتشار شمسی
+                const publishedSpan = document.createElement('span');
+                const persianDate = toPersianDate(post.published);
+                publishedSpan.textContent = `منتشر شده در: `;
+                const dateEm = document.createElement('em');
+                dateEm.className = 'persian-date'; // کلاس برای استایل دهی تاریخ شمسی
+                dateEm.textContent = persianDate;
+                publishedSpan.appendChild(dateEm);
+                metaDiv.appendChild(publishedSpan);
+
+                postCard.appendChild(metaDiv);
+
+                gridContainer.appendChild(postCard);
+            });
+        }
+
+        // اجرای اولیه هنگام بارگذاری صفحه
+        document.addEventListener('DOMContentLoaded', async () => {
+            const posts = await fetchPosts();
+            displayPosts(posts);
+        });
+    </script>
+</body>
+</html>

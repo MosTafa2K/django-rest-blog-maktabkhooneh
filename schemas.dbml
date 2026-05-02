@@ -1,0 +1,41 @@
+Table User {
+    id int [pk, increment]
+    username varchar
+    email varchar [unique]
+    password varchar [not null]
+    created datetime
+    updated datetime
+}
+
+Table Profile {
+    id int [pk, increment]
+    user int
+    first_name varchar
+    last_name varchar
+    image varchar [null]
+    description text
+    created datetime
+    updated datetime
+}
+
+Table Post {
+    id int [pk, increment]
+    author int
+    title varchar
+    content text
+    image varchar [null]
+    category int
+    status boolean
+    published datetime
+    created datetime
+    updated datetime
+}
+
+Table Category {
+    id int [pk, increment]
+    name varchar
+}
+
+Ref: "Category"."id" < "Post"."category"
+Ref: "Profile"."user" - "User"."id"
+Ref: "Post"."author" > "Profile"."id"
